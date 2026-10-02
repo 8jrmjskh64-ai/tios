@@ -1,6 +1,8 @@
 /* Ti OS — service worker.
    Приложение: сеть, если есть; кэш, если нет. Шрифты: кэш навсегда. */
-const APP = "tios-app-v4";
+/* Имя кэша менять не нужно: стратегия «сначала сеть» сама подтягивает
+   новый index.html при каждом онлайн-запуске. Этот файл больше не трогаем. */
+const APP = "tios-app";
 const FONT = "tios-font-v1";
 
 const SHELL = [
@@ -51,8 +53,11 @@ self.addEventListener("fetch", e => {
   if (url.origin !== location.origin) return;
 
   // Приложение: сначала сеть (чтобы обновления доезжали), иначе кэш.
+  // cache:"no-store" — мимо браузерного кэша: GitHub Pages просит держать
+  // файлы 10 минут, и без этого приложение ещё долго видело бы старую версию.
+  const fresh = new Request(req.url, { cache: "no-store", credentials: "same-origin" });
   e.respondWith(
-    fetch(req).then(res => {
+    fetch(fresh).then(res => {
       if (res && res.ok) {
         const copy = res.clone();
         caches.open(APP).then(c => c.put(req, copy)).catch(() => {});
