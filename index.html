@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no,interactive-widget=resizes-content">
 <meta name="theme-color" content="#05070e">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -77,6 +77,8 @@ button{cursor:pointer;border:none;background:none}
 .lbl{font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--l50);font-weight:700}
 .sh{margin:26px 0 12px;font-size:10px;letter-spacing:.26em;text-transform:uppercase;
   color:var(--l50);font-weight:700;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+/* все вкладки начинаются на одной высоте */
+.app > :first-child{margin-top:0}
 .sh button{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--l86);font-weight:700}
 .empty{padding:26px 4px;color:var(--l50);font-size:13px;line-height:1.6;text-align:center}
 
@@ -182,6 +184,9 @@ button{cursor:pointer;border:none;background:none}
   background:rgba(5,7,14,.93);border-top:1px solid var(--l11);
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
 .dock[data-off="1"]{opacity:0;pointer-events:none}
+/* пока открыт лист ввода — убираем всё, что клавиатура двигает */
+body[data-sheet="1"] .dock,
+body[data-sheet="1"] .top{opacity:0;pointer-events:none;transition:opacity .15s ease}
 .dock-in{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:7px}
 .acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .act{display:flex;align-items:center;justify-content:center;gap:8px;height:42px;
@@ -194,15 +199,15 @@ button{cursor:pointer;border:none;background:none}
 .tabs button{text-align:center;padding:7px 2px;font-size:9px;font-weight:700;color:var(--l50);
   letter-spacing:.08em;text-transform:uppercase;border-radius:8px;border-top:1px solid transparent}
 .tabs button[aria-current="page"]{color:var(--ink);border-top-color:var(--ink)}
-.skin-glass ~ .dock .act{border:none;border-radius:13px}
-.skin-glass ~ .dock .act.minus{background:linear-gradient(150deg,#ff8fb8,var(--neg));
+.skin-glass .dock .act{border:none;border-radius:13px}
+.skin-glass .dock .act.minus{background:linear-gradient(150deg,#ff8fb8,var(--neg));
   color:var(--on-neg);box-shadow:0 6px 18px rgba(255,107,168,.3)}
-.skin-glass ~ .dock .act.plus{background:linear-gradient(150deg,#7cf7e0,var(--pos));
+.skin-glass .dock .act.plus{background:linear-gradient(150deg,#7cf7e0,var(--pos));
   color:var(--on-pos);box-shadow:0 6px 18px rgba(69,240,210,.28)}
-.skin-glass ~ .dock .tabs{gap:2px;padding:3px;border-radius:13px;
+.skin-glass .dock .tabs{gap:2px;padding:3px;border-radius:13px;
   background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.1)}
-.skin-glass ~ .dock .tabs button{border-top:none;border-radius:10px}
-.skin-glass ~ .dock .tabs button[aria-current="page"]{background:var(--ink);color:#000}
+.skin-glass .dock .tabs button{border-top:none;border-radius:10px}
+.skin-glass .dock .tabs button[aria-current="page"]{background:var(--ink);color:#000}
 
 /* ---------- панели ---------- */
 .sc{position:fixed;inset:0;z-index:9;background:rgba(0,0,0,.74);
@@ -246,6 +251,20 @@ button{cursor:pointer;border:none;background:none}
 .chip[aria-pressed="true"]{background:var(--ink);color:#000;border-color:var(--ink);font-weight:700}
 .fld{display:flex;flex-direction:column;gap:8px}
 .r2{display:flex;gap:8px}
+
+/* лист ввода в «Стекле» — те же правила, что у остального интерфейса */
+.skin-glass .sheet{background:rgba(9,12,21,.84);border-top:1px solid rgba(255,255,255,.14);
+  border-radius:24px 24px 0 0;backdrop-filter:blur(28px) saturate(150%);
+  -webkit-backdrop-filter:blur(28px) saturate(150%)}
+.skin-glass .seg{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05)}
+.skin-glass .chip{background:var(--fill);border:var(--bord)}
+.skin-glass .chip[aria-pressed="true"]{background:var(--pos);color:var(--on-pos);border-color:transparent}
+.skin-glass .btn{border-radius:13px}
+.skin-glass .btn.fill{background:linear-gradient(150deg,#7cf7e0,var(--pos));color:var(--on-pos);
+  border-color:transparent;box-shadow:0 6px 18px rgba(69,240,210,.26)}
+.skin-glass .amt-w{border-bottom-color:rgba(255,255,255,.18)}
+.skin-glass .s-x{border-color:rgba(255,255,255,.22)}
+.skin-glass .opt{border-bottom-color:rgba(255,255,255,.08)}
 </style>
 
 </head>
@@ -273,7 +292,7 @@ button{cursor:pointer;border:none;background:none}
   </span>
 </div></div>
 
-<main class="app skin-mono" id="app"></main>
+<main class="app" id="app"></main>
 
 <div class="dock" id="dock"><div class="dock-in">
   <div class="acts">
@@ -488,7 +507,8 @@ function viewMore(){
 
 const VIEWS = {budget:viewBudget, goals:viewGoals, history:viewHistory, more:viewMore};
 function render(){
-  app.className = "app skin-" + S.skin;
+  // оформление живёт на body: так токены достают и до листа ввода, и до нижнего бара
+  document.body.className = "skin-" + S.skin;
   app.innerHTML = VIEWS[screen]();
 }
 function go(name){
@@ -503,10 +523,11 @@ document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click", ()
 
 /* ===================== ПАНЕЛИ ===================== */
 const host = document.getElementById("host");
-const close = ()=>{ host.innerHTML = ""; };
+const close = ()=>{ host.innerHTML = ""; document.body.dataset.sheet = "0"; };
 function shell(inner){
   host.innerHTML = `<div class="sc" data-close></div><div class="sheet" role="dialog"><div class="sheet-in">${inner}</div></div>`;
   host.querySelectorAll("[data-close]").forEach(x=>x.addEventListener("click", close));
+  document.body.dataset.sheet = "1";   // прячем шапку и бар: клавиатура их дёргает
 }
 function head(title){
   return `<div class="s-head"><b>${title}</b><button class="s-x" data-close aria-label="Закрыть">✕</button></div>`;
