@@ -1,6 +1,6 @@
 /* Ti OS — service worker.
    Приложение: сеть, если есть; кэш, если нет. Шрифты: кэш навсегда. */
-const APP = "tios-app-v2";
+const APP = "tios-app-v4";
 const FONT = "tios-font-v1";
 
 const SHELL = [
